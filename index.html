@@ -499,11 +499,27 @@
                             <strong>Google Sheets ID:</strong> 1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM
                         </p>
                         <p class="text-sm text-blue-700 mb-2">
-                            <strong>Apps Script URL:</strong> https://script.google.com/macros/s/AKfycbwRsubtozjKqvp10RIIjIQ_EPTEapHWkt-kPOutwbaQMNjfzjWx8mDGQAgPouiVEtt_xA/exec
+                            <strong>Apps Script URL:</strong> https://script.google.com/macros/s/AKfycbwtUhQAyAxksgrGL8NZX92r-4NoL3bX_emSHHGGhgPOEyxZxJe1hfywALmK-x9BvI2A2g/exec
                         </p>
-                        <p class="text-sm text-blue-600">
+                        <p class="text-sm text-blue-600 mb-3">
                             Data akan disinkronkan dengan Google Sheets melalui Google Apps Script. Pastikan semua sheet dan kolom sudah sesuai struktur yang diperlukan.
                         </p>
+                        
+                        <div class="border-t border-blue-200 pt-3">
+                            <button onclick="testGoogleSheetsConnection()" 
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 text-sm mr-2">
+                                🔄 Test Koneksi
+                            </button>
+                            <button onclick="showDebugInfo()" 
+                                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200 text-sm">
+                                🔍 Debug Info
+                            </button>
+                        </div>
+                        
+                        <div id="debugInfo" class="hidden mt-3 p-3 bg-gray-100 rounded text-xs">
+                            <strong>Debug Information:</strong><br>
+                            <span id="debugContent">Klik "Debug Info" untuk melihat detail koneksi</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -529,7 +545,7 @@
         
         // Google Sheets Configuration
         const GOOGLE_SHEETS_ID = '1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM';
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwRsubtozjKqvp10RIIjIQ_EPTEapHWkt-kPOutwbaQMNjfzjWx8mDGQAgPouiVEtt_xA/exec';
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtUhQAyAxksgrGL8NZX92r-4NoL3bX_emSHHGGhgPOEyxZxJe1hfywALmK-x9BvI2A2g/exec';
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -764,7 +780,7 @@
             // Set access controls based on user role
             setAccessControls();
             
-            simulateGoogleSheetsConnection();
+            testGoogleSheetsConnection();
             loadInitialData();
         }
 
@@ -821,16 +837,64 @@
             showNotification('Anda telah keluar dari sistem');
         }
 
-        function simulateGoogleSheetsConnection() {
-            setTimeout(() => {
-                const statusEl = document.getElementById('connectionStatus');
+        async function testGoogleSheetsConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+            
+            try {
+                console.log('Testing connection to Google Apps Script...');
+                console.log('URL:', GOOGLE_APPS_SCRIPT_URL);
+                
+                // Test connection with a simple request
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=test`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success || data.message) {
+                    statusEl.innerHTML = `
+                        <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800">
+                            <div class="w-4 h-4 bg-green-600 rounded-full mr-2"></div>
+                            ✅ Terhubung ke Google Sheets
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Invalid response from Apps Script');
+                }
+                
+            } catch (error) {
+                console.error('Connection test failed:', error);
                 statusEl.innerHTML = `
-                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800">
-                        <div class="w-4 h-4 bg-green-600 rounded-full mr-2"></div>
-                        Terhubung ke Google Sheets (Demo Mode)
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-red-100 text-red-800">
+                        <div class="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
+                        ❌ Gagal terhubung: ${error.message}
                     </div>
                 `;
-            }, 2000);
+                
+                // Show detailed error info
+                setTimeout(() => {
+                    statusEl.innerHTML += `
+                        <div class="mt-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                            <strong>Troubleshooting:</strong><br>
+                            1. Pastikan Apps Script sudah di-deploy sebagai Web App<br>
+                            2. Pastikan akses diset ke "Anyone" atau "Anyone with Google account"<br>
+                            3. Pastikan URL Apps Script benar<br>
+                            4. Cek console browser untuk error detail
+                        </div>
+                    `;
+                }, 1000);
+            }
         }
 
         function toggleHariPiket() {
@@ -1775,6 +1839,37 @@
             showNotification('Laporan berhasil di-generate!');
         }
 
+        function showDebugInfo() {
+            const debugDiv = document.getElementById('debugInfo');
+            const debugContent = document.getElementById('debugContent');
+            
+            const info = `
+                <strong>Konfigurasi Saat Ini:</strong><br>
+                • Google Sheets ID: ${GOOGLE_SHEETS_ID}<br>
+                • Apps Script URL: ${GOOGLE_APPS_SCRIPT_URL}<br>
+                • User Agent: ${navigator.userAgent}<br>
+                • Timestamp: ${new Date().toISOString()}<br><br>
+                
+                <strong>Status Data:</strong><br>
+                • Total Users: ${authorizedUsers.length}<br>
+                • Total Students: ${allStudents.length}<br>
+                • Total Teachers: ${allTeachers.length}<br>
+                • Total Attendance Records: ${allAbsensiData.length}<br><br>
+                
+                <strong>Endpoint yang Digunakan:</strong><br>
+                • GET Users: ?action=getUsers<br>
+                • GET Students: ?action=getSiswa<br>
+                • GET Teachers: ?action=getJadwalGuru&hari=[hari]<br>
+                • GET Attendance: ?action=getAbsensi&tanggal=[date]&kelas=[class]&jenisAbsensi=[type]<br>
+                • POST Save: action=saveAbsensi + data array<br><br>
+                
+                <strong>Cek Console Browser untuk error detail</strong>
+            `;
+            
+            debugContent.innerHTML = info;
+            debugDiv.classList.toggle('hidden');
+        }
+
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             const notificationText = document.getElementById('notificationText');
@@ -1798,5 +1893,5 @@
             }, 4000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98fa60f6b5f9cbe1',t:'MTc2MDY0NzMwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98fa990920bd678e',t:'MTc2MDY0OTYwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
