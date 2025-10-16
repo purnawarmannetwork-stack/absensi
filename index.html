@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Sekolah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">📚 Sistem Absensi Sekolah</h1>
+            <p class="text-gray-600">Terintegrasi dengan Google Sheets</p>
+            <div class="mt-4 text-sm text-gray-500">
+                <span id="currentDateTime" class="bg-white px-3 py-1 rounded-full shadow-sm"></span>
+            </div>
+        </header>
+
+        <!-- Status Connection -->
+        <div id="connectionStatus" class="mb-6 text-center">
+            <div class="inline-flex items-center px-4 py-2 rounded-full bg-yellow-100 text-yellow-800">
+                <div class="loading w-4 h-4 border-2 border-yellow-600 border-t-transparent rounded-full mr-2"></div>
+                Menghubungkan ke Google Sheets...
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-4xl mx-auto">
+            <!-- Tab Navigation -->
+            <div class="bg-white rounded-lg shadow-lg mb-6">
+                <div class="flex border-b">
+                    <button onclick="showTab('absensi')" id="tab-absensi" class="flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50">
+                        ✅ Absensi
+                    </button>
+                    <button onclick="showTab('laporan')" id="tab-laporan" class="flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700">
+                        📊 Laporan
+                    </button>
+                    <button onclick="showTab('data')" id="tab-data" class="flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700">
+                        👥 Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Absensi Tab -->
+            <div id="content-absensi" class="fade-in">
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Input Absensi</h2>
+                    
+                    <!-- Form Absensi -->
+                    <form id="absensiForm" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="tanggal" class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+                                <input type="date" id="tanggal" name="tanggal" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="kelas" class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
+                                <select id="kelas" name="kelas" required 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Pilih Kelas</option>
+                                    <option value="X-A">X-A</option>
+                                    <option value="X-B">X-B</option>
+                                    <option value="XI-A">XI-A</option>
+                                    <option value="XI-B">XI-B</option>
+                                    <option value="XII-A">XII-A</option>
+                                    <option value="XII-B">XII-B</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="mataPelajaran" class="block text-sm font-medium text-gray-700 mb-2">Mata Pelajaran</label>
+                                <select id="mataPelajaran" name="mataPelajaran" required 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Pilih Mata Pelajaran</option>
+                                    <option value="Matematika">Matematika</option>
+                                    <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                                    <option value="Bahasa Inggris">Bahasa Inggris</option>
+                                    <option value="Fisika">Fisika</option>
+                                    <option value="Kimia">Kimia</option>
+                                    <option value="Biologi">Biologi</option>
+                                    <option value="Sejarah">Sejarah</option>
+                                    <option value="Geografi">Geografi</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="jamKe" class="block text-sm font-medium text-gray-700 mb-2">Jam Ke</label>
+                                <select id="jamKe" name="jamKe" required 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Pilih Jam</option>
+                                    <option value="1">Jam 1 (07:00-07:45)</option>
+                                    <option value="2">Jam 2 (07:45-08:30)</option>
+                                    <option value="3">Jam 3 (08:30-09:15)</option>
+                                    <option value="4">Jam 4 (09:30-10:15)</option>
+                                    <option value="5">Jam 5 (10:15-11:00)</option>
+                                    <option value="6">Jam 6 (11:00-11:45)</option>
+                                    <option value="7">Jam 7 (12:30-13:15)</option>
+                                    <option value="8">Jam 8 (13:15-14:00)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="loadSiswa()" 
+                                class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                            📋 Muat Data Siswa
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Daftar Siswa -->
+                <div id="daftarSiswa" class="bg-white rounded-lg shadow-lg p-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-800">Daftar Absensi Siswa</h3>
+                        <div class="flex gap-2">
+                            <button onclick="markAllHadir()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200 text-sm">
+                                ✅ Semua Hadir
+                            </button>
+                            <button onclick="saveAbsensi()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 text-sm">
+                                💾 Simpan Absensi
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="siswaList" class="space-y-3">
+                        <!-- Siswa akan dimuat di sini -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Laporan Tab -->
+            <div id="content-laporan" class="hidden">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Laporan Absensi</h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label for="filterTanggalMulai" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
+                            <input type="date" id="filterTanggalMulai" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="filterTanggalAkhir" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Akhir</label>
+                            <input type="date" id="filterTanggalAkhir" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="filterKelas" class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
+                            <select id="filterKelas" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">Semua Kelas</option>
+                                <option value="X-A">X-A</option>
+                                <option value="X-B">X-B</option>
+                                <option value="XI-A">XI-A</option>
+                                <option value="XI-B">XI-B</option>
+                                <option value="XII-A">XII-A</option>
+                                <option value="XII-B">XII-B</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="generateLaporan()" 
+                            class="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition duration-200 font-medium mb-6">
+                        📈 Generate Laporan
+                    </button>
+
+                    <div id="laporanResult" class="hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse border border-gray-300">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="border border-gray-300 px-4 py-2 text-left">Nama Siswa</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-center">Total Hadir</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-center">Total Sakit</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-center">Total Izin</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-center">Total Alpha</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-center">Persentase Kehadiran</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="laporanTableBody">
+                                    <!-- Data laporan akan dimuat di sini -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Tab -->
+            <div id="content-data" class="hidden">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Data Siswa -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">👨‍🎓 Data Siswa</h3>
+                        <div id="dataSiswa" class="space-y-2 max-h-96 overflow-y-auto">
+                            <div class="text-center text-gray-500 py-8">
+                                <div class="loading w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                Memuat data siswa...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Guru -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">👨‍🏫 Data Guru</h3>
+                        <div id="dataGuru" class="space-y-2 max-h-96 overflow-y-auto">
+                            <div class="text-center text-gray-500 py-8">
+                                <div class="loading w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                Memuat data guru...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification -->
+        <div id="notification" class="fixed top-4 right-4 hidden">
+            <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+                <span id="notificationText"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentStudents = [];
+        let allAbsensiData = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+            simulateGoogleSheetsConnection();
+            loadInitialData();
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        function simulateGoogleSheetsConnection() {
+            setTimeout(() => {
+                const statusEl = document.getElementById('connectionStatus');
+                statusEl.innerHTML = `
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800">
+                        <div class="w-4 h-4 bg-green-600 rounded-full mr-2"></div>
+                        Terhubung ke Google Sheets (Demo Mode)
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('[id^="content-"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50');
+                el.classList.add('text-gray-500', 'hover:text-gray-700');
+            });
+            
+            // Show selected content
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            
+            // Add active class to selected tab
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            activeTab.classList.remove('text-gray-500', 'hover:text-gray-700');
+            activeTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50');
+        }
+
+        function loadInitialData() {
+            // Simulate loading data from Google Sheets
+            setTimeout(() => {
+                loadDataSiswa();
+                loadDataGuru();
+            }, 2500);
+        }
+
+        function loadDataSiswa() {
+            // Sample student data (would come from Google Sheets)
+            const siswaData = [
+                { nama: 'Ahmad Rizki', kelas: 'X-A', nis: '001' },
+                { nama: 'Siti Nurhaliza', kelas: 'X-A', nis: '002' },
+                { nama: 'Budi Santoso', kelas: 'X-A', nis: '003' },
+                { nama: 'Dewi Sartika', kelas: 'X-B', nis: '004' },
+                { nama: 'Eko Prasetyo', kelas: 'X-B', nis: '005' },
+                { nama: 'Fitri Handayani', kelas: 'XI-A', nis: '006' },
+                { nama: 'Gilang Ramadhan', kelas: 'XI-A', nis: '007' },
+                { nama: 'Hani Safitri', kelas: 'XI-B', nis: '008' },
+                { nama: 'Indra Gunawan', kelas: 'XII-A', nis: '009' },
+                { nama: 'Joko Widodo', kelas: 'XII-B', nis: '010' }
+            ];
+
+            const container = document.getElementById('dataSiswa');
+            container.innerHTML = siswaData.map(siswa => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-medium text-gray-800">${siswa.nama}</div>
+                        <div class="text-sm text-gray-500">NIS: ${siswa.nis} | Kelas: ${siswa.kelas}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadDataGuru() {
+            // Sample teacher data (would come from Google Sheets)
+            const guruData = [
+                { nama: 'Dr. Suryanto, M.Pd', mapel: 'Matematika', nip: 'G001' },
+                { nama: 'Dra. Sari Dewi', mapel: 'Bahasa Indonesia', nip: 'G002' },
+                { nama: 'John Smith, S.Pd', mapel: 'Bahasa Inggris', nip: 'G003' },
+                { nama: 'Prof. Hartono', mapel: 'Fisika', nip: 'G004' },
+                { nama: 'Dr. Wati Sari', mapel: 'Kimia', nip: 'G005' }
+            ];
+
+            const container = document.getElementById('dataGuru');
+            container.innerHTML = guruData.map(guru => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-medium text-gray-800">${guru.nama}</div>
+                        <div class="text-sm text-gray-500">NIP: ${guru.nip} | ${guru.mapel}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadSiswa() {
+            const kelas = document.getElementById('kelas').value;
+            if (!kelas) {
+                showNotification('Pilih kelas terlebih dahulu!', 'error');
+                return;
+            }
+
+            // Sample students for selected class
+            const allStudents = {
+                'X-A': [
+                    { nama: 'Ahmad Rizki', nis: '001' },
+                    { nama: 'Siti Nurhaliza', nis: '002' },
+                    { nama: 'Budi Santoso', nis: '003' },
+                    { nama: 'Citra Dewi', nis: '004' },
+                    { nama: 'Doni Pratama', nis: '005' }
+                ],
+                'X-B': [
+                    { nama: 'Eka Putri', nis: '006' },
+                    { nama: 'Fajar Sidik', nis: '007' },
+                    { nama: 'Gita Sari', nis: '008' },
+                    { nama: 'Hendra Wijaya', nis: '009' },
+                    { nama: 'Ira Susanti', nis: '010' }
+                ],
+                'XI-A': [
+                    { nama: 'Joko Santoso', nis: '011' },
+                    { nama: 'Kartika Sari', nis: '012' },
+                    { nama: 'Lukman Hakim', nis: '013' },
+                    { nama: 'Maya Sari', nis: '014' },
+                    { nama: 'Nanda Pratama', nis: '015' }
+                ]
+            };
+
+            currentStudents = allStudents[kelas] || [];
+            
+            const siswaList = document.getElementById('siswaList');
+            siswaList.innerHTML = currentStudents.map((siswa, index) => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">${siswa.nama}</div>
+                            <div class="text-sm text-gray-500">NIS: ${siswa.nis}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <label class="flex items-center">
+                            <input type="radio" name="absensi_${siswa.nis}" value="Hadir" class="mr-1" checked>
+                            <span class="text-green-600 font-medium">✅ Hadir</span>
+                        </label>
+                        <label class="flex items-center ml-4">
+                            <input type="radio" name="absensi_${siswa.nis}" value="Sakit" class="mr-1">
+                            <span class="text-yellow-600 font-medium">🤒 Sakit</span>
+                        </label>
+                        <label class="flex items-center ml-4">
+                            <input type="radio" name="absensi_${siswa.nis}" value="Izin" class="mr-1">
+                            <span class="text-blue-600 font-medium">📝 Izin</span>
+                        </label>
+                        <label class="flex items-center ml-4">
+                            <input type="radio" name="absensi_${siswa.nis}" value="Alpha" class="mr-1">
+                            <span class="text-red-600 font-medium">❌ Alpha</span>
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('daftarSiswa').classList.remove('hidden');
+            showNotification('Data siswa berhasil dimuat!');
+        }
+
+        function markAllHadir() {
+            currentStudents.forEach(siswa => {
+                const hadirRadio = document.querySelector(`input[name="absensi_${siswa.nis}"][value="Hadir"]`);
+                if (hadirRadio) hadirRadio.checked = true;
+            });
+            showNotification('Semua siswa ditandai hadir!');
+        }
+
+        function saveAbsensi() {
+            const tanggal = document.getElementById('tanggal').value;
+            const kelas = document.getElementById('kelas').value;
+            const mataPelajaran = document.getElementById('mataPelajaran').value;
+            const jamKe = document.getElementById('jamKe').value;
+
+            if (!tanggal || !kelas || !mataPelajaran || !jamKe) {
+                showNotification('Lengkapi semua field terlebih dahulu!', 'error');
+                return;
+            }
+
+            const absensiData = [];
+            currentStudents.forEach(siswa => {
+                const selectedStatus = document.querySelector(`input[name="absensi_${siswa.nis}"]:checked`);
+                if (selectedStatus) {
+                    absensiData.push({
+                        tanggal,
+                        kelas,
+                        mataPelajaran,
+                        jamKe,
+                        nama: siswa.nama,
+                        nis: siswa.nis,
+                        status: selectedStatus.value,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            });
+
+            // Simulate saving to Google Sheets
+            allAbsensiData.push(...absensiData);
+            
+            showNotification(`Absensi berhasil disimpan untuk ${absensiData.length} siswa!`);
+            
+            // Reset form
+            document.getElementById('absensiForm').reset();
+            document.getElementById('daftarSiswa').classList.add('hidden');
+            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+        }
+
+        function generateLaporan() {
+            const tanggalMulai = document.getElementById('filterTanggalMulai').value;
+            const tanggalAkhir = document.getElementById('filterTanggalAkhir').value;
+            const filterKelas = document.getElementById('filterKelas').value;
+
+            // Filter data based on criteria
+            let filteredData = allAbsensiData;
+            
+            if (tanggalMulai) {
+                filteredData = filteredData.filter(item => item.tanggal >= tanggalMulai);
+            }
+            if (tanggalAkhir) {
+                filteredData = filteredData.filter(item => item.tanggal <= tanggalAkhir);
+            }
+            if (filterKelas) {
+                filteredData = filteredData.filter(item => item.kelas === filterKelas);
+            }
+
+            // Group by student
+            const studentStats = {};
+            filteredData.forEach(item => {
+                if (!studentStats[item.nis]) {
+                    studentStats[item.nis] = {
+                        nama: item.nama,
+                        hadir: 0,
+                        sakit: 0,
+                        izin: 0,
+                        alpha: 0,
+                        total: 0
+                    };
+                }
+                studentStats[item.nis][item.status.toLowerCase()]++;
+                studentStats[item.nis].total++;
+            });
+
+            // Generate table
+            const tbody = document.getElementById('laporanTableBody');
+            tbody.innerHTML = Object.values(studentStats).map(student => {
+                const persentase = student.total > 0 ? ((student.hadir / student.total) * 100).toFixed(1) : 0;
+                return `
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">${student.nama}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">${student.hadir}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">${student.sakit}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">${student.izin}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">${student.alpha}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            <span class="px-2 py-1 rounded-full text-sm ${persentase >= 80 ? 'bg-green-100 text-green-800' : persentase >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                                ${persentase}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('laporanResult').classList.remove('hidden');
+            showNotification('Laporan berhasil di-generate!');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            
+            // Set color based on type
+            const notificationDiv = notification.querySelector('div');
+            if (type === 'error') {
+                notificationDiv.className = 'bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg';
+            } else {
+                notificationDiv.className = 'bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg';
+            }
+            
+            notification.classList.remove('hidden');
+            
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98f9203d5598fcf7',t:'MTc2MDYzNDE2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
