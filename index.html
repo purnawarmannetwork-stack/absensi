@@ -26,10 +26,68 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">🔐 Login Petugas Piket</h1>
+                <p class="text-gray-600">Sistem Absensi Sekolah</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input type="text" id="username" name="username" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Masukkan username">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Masukkan password">
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                    🚪 Masuk
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-500">Demo Login:</p>
+                <div class="mt-2 space-y-1 text-xs text-gray-400">
+                    <p>Username: admin | Password: admin123</p>
+                    <p>Username: piket1 | Password: piket123</p>
+                </div>
+            </div>
+
+            <div id="loginError" class="mt-4 hidden">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <span id="loginErrorText"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="container mx-auto px-4 py-8 hidden">
         <!-- Header -->
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">📚 Sistem Absensi Sekolah</h1>
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-4xl font-bold text-gray-800">📚 Sistem Absensi Sekolah</h1>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-sm text-gray-600">Selamat datang,</div>
+                        <div class="font-medium text-gray-800" id="loggedInUser"></div>
+                    </div>
+                    <button onclick="logout()" 
+                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200 text-sm">
+                        🚪 Keluar
+                    </button>
+                </div>
+            </div>
             <p class="text-gray-600">Terintegrasi dengan Google Sheets</p>
             <div class="mt-4 text-sm text-gray-500">
                 <span id="currentDateTime" class="bg-white px-3 py-1 rounded-full shadow-sm"></span>
@@ -58,6 +116,9 @@
                     <button onclick="showTab('data')" id="tab-data" class="flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700">
                         👥 Data
                     </button>
+                    <button onclick="showTab('petugas')" id="tab-petugas" class="flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700">
+                        🔐 Petugas
+                    </button>
                 </div>
             </div>
 
@@ -79,12 +140,14 @@
                                 <select id="kelas" name="kelas" required 
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     <option value="">Pilih Kelas</option>
-                                    <option value="X-A">X-A</option>
-                                    <option value="X-B">X-B</option>
-                                    <option value="XI-A">XI-A</option>
-                                    <option value="XI-B">XI-B</option>
-                                    <option value="XII-A">XII-A</option>
-                                    <option value="XII-B">XII-B</option>
+                                    <option value="71">Kelas 71</option>
+                                    <option value="72">Kelas 72</option>
+                                    <option value="81">Kelas 81</option>
+                                    <option value="82">Kelas 82</option>
+                                    <option value="83">Kelas 83</option>
+                                    <option value="91">Kelas 91</option>
+                                    <option value="92">Kelas 92</option>
+                                    <option value="93">Kelas 93</option>
                                 </select>
                             </div>
                         </div>
@@ -95,14 +158,17 @@
                                 <select id="mataPelajaran" name="mataPelajaran" required 
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     <option value="">Pilih Mata Pelajaran</option>
-                                    <option value="Matematika">Matematika</option>
-                                    <option value="Bahasa Indonesia">Bahasa Indonesia</option>
-                                    <option value="Bahasa Inggris">Bahasa Inggris</option>
-                                    <option value="Fisika">Fisika</option>
-                                    <option value="Kimia">Kimia</option>
-                                    <option value="Biologi">Biologi</option>
-                                    <option value="Sejarah">Sejarah</option>
-                                    <option value="Geografi">Geografi</option>
+                                    <option value="PAI">PAI</option>
+                                    <option value="PKN">PKN</option>
+                                    <option value="B. INDO">B. INDO</option>
+                                    <option value="B. INGGRIS">B. INGGRIS</option>
+                                    <option value="MTK">MTK</option>
+                                    <option value="IPA">IPA</option>
+                                    <option value="IPS">IPS</option>
+                                    <option value="PJOK">PJOK</option>
+                                    <option value="SENIBUDAYA">SENIBUDAYA</option>
+                                    <option value="TIK">TIK</option>
+                                    <option value="B.SUNDA">B.SUNDA</option>
                                 </select>
                             </div>
                             <div>
@@ -110,14 +176,20 @@
                                 <select id="jamKe" name="jamKe" required 
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     <option value="">Pilih Jam</option>
-                                    <option value="1">Jam 1 (07:00-07:45)</option>
-                                    <option value="2">Jam 2 (07:45-08:30)</option>
-                                    <option value="3">Jam 3 (08:30-09:15)</option>
-                                    <option value="4">Jam 4 (09:30-10:15)</option>
-                                    <option value="5">Jam 5 (10:15-11:00)</option>
-                                    <option value="6">Jam 6 (11:00-11:45)</option>
-                                    <option value="7">Jam 7 (12:30-13:15)</option>
-                                    <option value="8">Jam 8 (13:15-14:00)</option>
+                                    <option value="1">Jam 1</option>
+                                    <option value="2">Jam 2</option>
+                                    <option value="3">Jam 3</option>
+                                    <option value="4">Jam 4</option>
+                                    <option value="5">Jam 5</option>
+                                    <option value="6">Jam 6</option>
+                                    <option value="7">Jam 7</option>
+                                    <option value="8">Jam 8</option>
+                                    <option value="9">Jam 9</option>
+                                    <option value="10">Jam 10</option>
+                                    <option value="11">Jam 11</option>
+                                    <option value="12">Jam 12</option>
+                                    <option value="13">Jam 13</option>
+                                    <option value="14">Jam 14</option>
                                 </select>
                             </div>
                         </div>
@@ -137,7 +209,7 @@
                             <button onclick="markAllHadir()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200 text-sm">
                                 ✅ Semua Hadir
                             </button>
-                            <button onclick="saveAbsensi()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 text-sm">
+                            <button onclick="saveAbsensi()" id="saveAbsensiBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 text-sm">
                                 💾 Simpan Absensi
                             </button>
                         </div>
@@ -169,12 +241,14 @@
                             <label for="filterKelas" class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
                             <select id="filterKelas" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Semua Kelas</option>
-                                <option value="X-A">X-A</option>
-                                <option value="X-B">X-B</option>
-                                <option value="XI-A">XI-A</option>
-                                <option value="XI-B">XI-B</option>
-                                <option value="XII-A">XII-A</option>
-                                <option value="XII-B">XII-B</option>
+                                <option value="71">Kelas 71</option>
+                                <option value="72">Kelas 72</option>
+                                <option value="81">Kelas 81</option>
+                                <option value="82">Kelas 82</option>
+                                <option value="83">Kelas 83</option>
+                                <option value="91">Kelas 91</option>
+                                <option value="92">Kelas 92</option>
+                                <option value="93">Kelas 93</option>
                             </select>
                         </div>
                     </div>
@@ -232,6 +306,103 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Petugas Tab -->
+            <div id="content-petugas" class="hidden">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Manajemen Petugas Piket</h2>
+                        <button onclick="showAddPetugasForm()" id="addPetugasBtn"
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+                            ➕ Tambah Petugas
+                        </button>
+                    </div>
+
+                    <!-- Form Tambah Petugas -->
+                    <div id="addPetugasForm" class="hidden mb-6 p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Tambah Petugas Baru</h3>
+                        <form id="petugasForm" class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="newUsername" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                <input type="text" id="newUsername" name="newUsername" required 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                <input type="password" id="newPassword" name="newPassword" required 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="newNama" class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                                <input type="text" id="newNama" name="newNama" required 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="newRole" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                                <select id="newRole" name="newRole" required onchange="toggleHariPiket()"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Pilih Role</option>
+                                    <option value="admin">Administrator</option>
+                                    <option value="piket">Petugas Piket</option>
+                                    <option value="guru">Guru</option>
+                                </select>
+                            </div>
+                            <div id="hariPiketDiv" class="hidden">
+                                <label for="hariPiket" class="block text-sm font-medium text-gray-700 mb-2">Hari Piket</label>
+                                <select id="hariPiket" name="hariPiket" 
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Pilih Hari</option>
+                                    <option value="Senin">Senin</option>
+                                    <option value="Selasa">Selasa</option>
+                                    <option value="Rabu">Rabu</option>
+                                    <option value="Kamis">Kamis</option>
+                                    <option value="Jumat">Jumat</option>
+                                    <option value="Sabtu">Sabtu</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2 flex gap-2">
+                                <button type="submit" 
+                                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                                    💾 Simpan
+                                </button>
+                                <button type="button" onclick="hideAddPetugasForm()" 
+                                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition duration-200">
+                                    ❌ Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Daftar Petugas -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-300">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="border border-gray-300 px-4 py-2 text-left">Username</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left">Nama Lengkap</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center">Role</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center">Hari Piket</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center">Status</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="petugasTableBody">
+                                <!-- Data petugas akan dimuat di sini -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-bold text-blue-800 mb-2">📋 Informasi Google Sheets Integration</h4>
+                        <p class="text-sm text-blue-700 mb-2">
+                            <strong>Google Sheets ID:</strong> 1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM
+                        </p>
+                        <p class="text-sm text-blue-600">
+                            Data petugas akan disinkronkan dengan Google Sheets. Pastikan sheet memiliki kolom: username, password, nama, role.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Notification -->
@@ -246,14 +417,16 @@
         // Global variables
         let currentStudents = [];
         let allAbsensiData = [];
+        let currentUser = null;
+        let authorizedUsers = [];
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateDateTime();
             setInterval(updateDateTime, 1000);
-            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
-            simulateGoogleSheetsConnection();
-            loadInitialData();
+            loadAuthorizedUsers();
+            setupLoginForm();
+            checkExistingLogin();
         });
 
         function updateDateTime() {
@@ -267,7 +440,177 @@
                 minute: '2-digit',
                 second: '2-digit'
             };
-            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('id-ID', options);
+            const dateTimeEl = document.getElementById('currentDateTime');
+            if (dateTimeEl) {
+                dateTimeEl.textContent = now.toLocaleDateString('id-ID', options);
+            }
+        }
+
+        function loadAuthorizedUsers() {
+            // Simulate loading users from Google Sheets
+            // In real implementation, this would fetch from the Google Sheets API
+            authorizedUsers = [
+                { username: 'admin', password: 'admin123', nama: 'Administrator', role: 'admin', hariPiket: null },
+                { username: 'piket1', password: 'piket123', nama: 'Petugas Piket Senin', role: 'piket', hariPiket: 'Senin' },
+                { username: 'piket2', password: 'piket456', nama: 'Petugas Piket Selasa', role: 'piket', hariPiket: 'Selasa' },
+                { username: 'piket3', password: 'piket789', nama: 'Petugas Piket Rabu', role: 'piket', hariPiket: 'Rabu' },
+                { username: 'piket4', password: 'piket101', nama: 'Petugas Piket Kamis', role: 'piket', hariPiket: 'Kamis' },
+                { username: 'piket5', password: 'piket202', nama: 'Petugas Piket Jumat', role: 'piket', hariPiket: 'Jumat' },
+                { username: 'piket6', password: 'piket303', nama: 'Petugas Piket Sabtu', role: 'piket', hariPiket: 'Sabtu' },
+                { username: 'guru1', password: 'guru123', nama: 'Bapak Suryanto', role: 'guru', hariPiket: null },
+                { username: 'guru2', password: 'guru456', nama: 'Ibu Sari Dewi', role: 'guru', hariPiket: null }
+            ];
+            
+            console.log('Data petugas berhasil dimuat dari Google Sheets (Demo Mode)');
+        }
+
+        function setupLoginForm() {
+            const loginForm = document.getElementById('loginForm');
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleLogin();
+            });
+        }
+
+        function checkExistingLogin() {
+            // Check if user is already logged in (from localStorage)
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            }
+        }
+
+        function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            // Clear previous errors
+            hideLoginError();
+            
+            if (!username || !password) {
+                showLoginError('Username dan password harus diisi!');
+                return;
+            }
+
+            // Simulate API call delay
+            const submitBtn = document.querySelector('#loginForm button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '🔄 Memverifikasi...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                // Check credentials
+                const user = authorizedUsers.find(u => 
+                    u.username === username && u.password === password
+                );
+
+                if (user) {
+                    // Successful login
+                    currentUser = {
+                        username: user.username,
+                        nama: user.nama,
+                        role: user.role,
+                        loginTime: new Date().toISOString()
+                    };
+                    
+                    // Save to localStorage
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    showMainApp();
+                } else {
+                    showLoginError('Username atau password salah!');
+                }
+
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 1500);
+        }
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            const errorText = document.getElementById('loginErrorText');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function hideLoginError() {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            // Update user info
+            document.getElementById('loggedInUser').textContent = currentUser.nama;
+            
+            // Initialize main app
+            const tanggalInput = document.getElementById('tanggal');
+            if (tanggalInput) {
+                tanggalInput.value = new Date().toISOString().split('T')[0];
+            }
+            
+            // Set access controls based on user role
+            setAccessControls();
+            
+            simulateGoogleSheetsConnection();
+            loadInitialData();
+        }
+
+        function setAccessControls() {
+            const addPetugasBtn = document.getElementById('addPetugasBtn');
+            
+            // Only admin can add new users
+            if (currentUser.role !== 'admin') {
+                addPetugasBtn.style.display = 'none';
+            }
+            
+            // Check if attendance can be saved (piket officer for today or admin)
+            checkAbsensiPermission();
+        }
+
+        function checkAbsensiPermission() {
+            const today = new Date();
+            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const currentDay = dayNames[today.getDay()];
+            
+            const saveBtn = document.getElementById('saveAbsensiBtn');
+            
+            if (currentUser.role === 'admin') {
+                // Admin can always save
+                return;
+            } else if (currentUser.role === 'piket') {
+                // Piket officer can only save on their assigned day
+                if (currentUser.hariPiket !== currentDay) {
+                    saveBtn.disabled = true;
+                    saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    saveBtn.title = `Anda hanya dapat mengabsen pada hari ${currentUser.hariPiket}. Hari ini: ${currentDay}`;
+                }
+            } else {
+                // Guru cannot save attendance
+                saveBtn.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveBtn.title = 'Hanya petugas piket yang dapat menyimpan absensi';
+            }
+        }
+
+        function logout() {
+            // Clear user data
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            
+            // Reset forms
+            document.getElementById('loginForm').reset();
+            hideLoginError();
+            
+            // Show login screen
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            
+            showNotification('Anda telah keluar dari sistem');
         }
 
         function simulateGoogleSheetsConnection() {
@@ -280,6 +623,21 @@
                     </div>
                 `;
             }, 2000);
+        }
+
+        function toggleHariPiket() {
+            const roleSelect = document.getElementById('newRole');
+            const hariPiketDiv = document.getElementById('hariPiketDiv');
+            const hariPiketSelect = document.getElementById('hariPiket');
+            
+            if (roleSelect.value === 'piket') {
+                hariPiketDiv.classList.remove('hidden');
+                hariPiketSelect.required = true;
+            } else {
+                hariPiketDiv.classList.add('hidden');
+                hariPiketSelect.required = false;
+                hariPiketSelect.value = '';
+            }
         }
 
         function showTab(tabName) {
@@ -301,6 +659,149 @@
             const activeTab = document.getElementById(`tab-${tabName}`);
             activeTab.classList.remove('text-gray-500', 'hover:text-gray-700');
             activeTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50');
+
+            // Load data for specific tabs
+            if (tabName === 'petugas') {
+                loadPetugasTable();
+            }
+        }
+
+        function showAddPetugasForm() {
+            document.getElementById('addPetugasForm').classList.remove('hidden');
+            document.getElementById('petugasForm').addEventListener('submit', handleAddPetugas);
+        }
+
+        function hideAddPetugasForm() {
+            document.getElementById('addPetugasForm').classList.add('hidden');
+            document.getElementById('petugasForm').reset();
+        }
+
+        function handleAddPetugas(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const nama = document.getElementById('newNama').value.trim();
+            const role = document.getElementById('newRole').value;
+            const hariPiket = document.getElementById('hariPiket').value;
+
+            // Validate input
+            if (!username || !password || !nama || !role) {
+                showNotification('Semua field harus diisi!', 'error');
+                return;
+            }
+
+            // Validate piket day if role is piket
+            if (role === 'piket' && !hariPiket) {
+                showNotification('Hari piket harus dipilih untuk petugas piket!', 'error');
+                return;
+            }
+
+            // Check if username already exists
+            if (authorizedUsers.find(u => u.username === username)) {
+                showNotification('Username sudah digunakan!', 'error');
+                return;
+            }
+
+            // Check if day is already assigned to another piket officer
+            if (role === 'piket') {
+                const existingPiket = authorizedUsers.find(u => u.role === 'piket' && u.hariPiket === hariPiket);
+                if (existingPiket) {
+                    showNotification(`Hari ${hariPiket} sudah ditugaskan kepada ${existingPiket.nama}!`, 'error');
+                    return;
+                }
+            }
+
+            // Add new user
+            const newUser = { 
+                username, 
+                password, 
+                nama, 
+                role, 
+                hariPiket: role === 'piket' ? hariPiket : null 
+            };
+            authorizedUsers.push(newUser);
+
+            // Simulate saving to Google Sheets
+            showNotification('Petugas baru berhasil ditambahkan!');
+            
+            // Reset form and hide
+            hideAddPetugasForm();
+            loadPetugasTable();
+        }
+
+        function loadPetugasTable() {
+            const tbody = document.getElementById('petugasTableBody');
+            tbody.innerHTML = authorizedUsers.map((user, index) => {
+                const roleLabel = {
+                    'admin': '👑 Administrator',
+                    'piket': '🔐 Petugas Piket',
+                    'guru': '👨‍🏫 Guru'
+                };
+
+                const isCurrentUser = currentUser && currentUser.username === user.username;
+                
+                return `
+                    <tr class="${isCurrentUser ? 'bg-blue-50' : ''}">
+                        <td class="border border-gray-300 px-4 py-2">
+                            ${user.username}
+                            ${isCurrentUser ? '<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2">Anda</span>' : ''}
+                        </td>
+                        <td class="border border-gray-300 px-4 py-2">${user.nama}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            <span class="text-sm">${roleLabel[user.role] || user.role}</span>
+                        </td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            ${user.hariPiket ? `<span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">${user.hariPiket}</span>` : '<span class="text-gray-400 text-xs">-</span>'}
+                        </td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Aktif</span>
+                        </td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            ${!isCurrentUser && currentUser.role === 'admin' ? `
+                                <button onclick="deletePetugas('${user.username}')" 
+                                        class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition duration-200">
+                                    🗑️ Hapus
+                                </button>
+                            ` : '<span class="text-gray-400 text-xs">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function deletePetugas(username) {
+            if (currentUser && currentUser.username === username) {
+                showNotification('Tidak dapat menghapus akun yang sedang digunakan!', 'error');
+                return;
+            }
+
+            // Create confirmation dialog
+            const confirmDiv = document.createElement('div');
+            confirmDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            confirmDiv.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Konfirmasi Hapus</h3>
+                    <p class="text-gray-600 mb-6">Yakin ingin menghapus petugas "${username}"?</p>
+                    <div class="flex gap-2 justify-end">
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                            Batal
+                        </button>
+                        <button onclick="confirmDeletePetugas('${username}'); this.closest('.fixed').remove()" 
+                                class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                            Hapus
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(confirmDiv);
+        }
+
+        function confirmDeletePetugas(username) {
+            authorizedUsers = authorizedUsers.filter(u => u.username !== username);
+            showNotification('Petugas berhasil dihapus!');
+            loadPetugasTable();
         }
 
         function loadInitialData() {
@@ -314,16 +815,16 @@
         function loadDataSiswa() {
             // Sample student data (would come from Google Sheets)
             const siswaData = [
-                { nama: 'Ahmad Rizki', kelas: 'X-A', nis: '001' },
-                { nama: 'Siti Nurhaliza', kelas: 'X-A', nis: '002' },
-                { nama: 'Budi Santoso', kelas: 'X-A', nis: '003' },
-                { nama: 'Dewi Sartika', kelas: 'X-B', nis: '004' },
-                { nama: 'Eko Prasetyo', kelas: 'X-B', nis: '005' },
-                { nama: 'Fitri Handayani', kelas: 'XI-A', nis: '006' },
-                { nama: 'Gilang Ramadhan', kelas: 'XI-A', nis: '007' },
-                { nama: 'Hani Safitri', kelas: 'XI-B', nis: '008' },
-                { nama: 'Indra Gunawan', kelas: 'XII-A', nis: '009' },
-                { nama: 'Joko Widodo', kelas: 'XII-B', nis: '010' }
+                { nama: 'Ahmad Rizki', kelas: '71', nis: '71001' },
+                { nama: 'Siti Nurhaliza', kelas: '71', nis: '71002' },
+                { nama: 'Eka Putri', kelas: '72', nis: '72001' },
+                { nama: 'Fajar Sidik', kelas: '72', nis: '72002' },
+                { nama: 'Joko Santoso', kelas: '81', nis: '81001' },
+                { nama: 'Kartika Sari', kelas: '81', nis: '81002' },
+                { nama: 'Oki Setiawan', kelas: '82', nis: '82001' },
+                { nama: 'Putri Ayu', kelas: '82', nis: '82002' },
+                { nama: 'Tina Wulandari', kelas: '83', nis: '83001' },
+                { nama: 'Yanto Basuki', kelas: '91', nis: '91001' }
             ];
 
             const container = document.getElementById('dataSiswa');
@@ -367,26 +868,61 @@
 
             // Sample students for selected class
             const allStudents = {
-                'X-A': [
-                    { nama: 'Ahmad Rizki', nis: '001' },
-                    { nama: 'Siti Nurhaliza', nis: '002' },
-                    { nama: 'Budi Santoso', nis: '003' },
-                    { nama: 'Citra Dewi', nis: '004' },
-                    { nama: 'Doni Pratama', nis: '005' }
+                '71': [
+                    { nama: 'Ahmad Rizki', nis: '71001' },
+                    { nama: 'Siti Nurhaliza', nis: '71002' },
+                    { nama: 'Budi Santoso', nis: '71003' },
+                    { nama: 'Citra Dewi', nis: '71004' },
+                    { nama: 'Doni Pratama', nis: '71005' }
                 ],
-                'X-B': [
-                    { nama: 'Eka Putri', nis: '006' },
-                    { nama: 'Fajar Sidik', nis: '007' },
-                    { nama: 'Gita Sari', nis: '008' },
-                    { nama: 'Hendra Wijaya', nis: '009' },
-                    { nama: 'Ira Susanti', nis: '010' }
+                '72': [
+                    { nama: 'Eka Putri', nis: '72001' },
+                    { nama: 'Fajar Sidik', nis: '72002' },
+                    { nama: 'Gita Sari', nis: '72003' },
+                    { nama: 'Hendra Wijaya', nis: '72004' },
+                    { nama: 'Ira Susanti', nis: '72005' }
                 ],
-                'XI-A': [
-                    { nama: 'Joko Santoso', nis: '011' },
-                    { nama: 'Kartika Sari', nis: '012' },
-                    { nama: 'Lukman Hakim', nis: '013' },
-                    { nama: 'Maya Sari', nis: '014' },
-                    { nama: 'Nanda Pratama', nis: '015' }
+                '81': [
+                    { nama: 'Joko Santoso', nis: '81001' },
+                    { nama: 'Kartika Sari', nis: '81002' },
+                    { nama: 'Lukman Hakim', nis: '81003' },
+                    { nama: 'Maya Sari', nis: '81004' },
+                    { nama: 'Nanda Pratama', nis: '81005' }
+                ],
+                '82': [
+                    { nama: 'Oki Setiawan', nis: '82001' },
+                    { nama: 'Putri Ayu', nis: '82002' },
+                    { nama: 'Qori Rahman', nis: '82003' },
+                    { nama: 'Rina Sari', nis: '82004' },
+                    { nama: 'Sandi Pratama', nis: '82005' }
+                ],
+                '83': [
+                    { nama: 'Tina Wulandari', nis: '83001' },
+                    { nama: 'Udin Sedunia', nis: '83002' },
+                    { nama: 'Vina Melati', nis: '83003' },
+                    { nama: 'Wawan Kurniawan', nis: '83004' },
+                    { nama: 'Xenia Putri', nis: '83005' }
+                ],
+                '91': [
+                    { nama: 'Yanto Basuki', nis: '91001' },
+                    { nama: 'Zara Amelia', nis: '91002' },
+                    { nama: 'Andi Wijaya', nis: '91003' },
+                    { nama: 'Bella Safitri', nis: '91004' },
+                    { nama: 'Candra Kirana', nis: '91005' }
+                ],
+                '92': [
+                    { nama: 'Dimas Anggara', nis: '92001' },
+                    { nama: 'Elsa Frozen', nis: '92002' },
+                    { nama: 'Farel Prayoga', nis: '92003' },
+                    { nama: 'Gina Valentina', nis: '92004' },
+                    { nama: 'Hasan Basri', nis: '92005' }
+                ],
+                '93': [
+                    { nama: 'Indah Permata', nis: '93001' },
+                    { nama: 'Jihan Aulia', nis: '93002' },
+                    { nama: 'Kenzo Alvaro', nis: '93003' },
+                    { nama: 'Luna Maya', nis: '93004' },
+                    { nama: 'Miko Sabrina', nis: '93005' }
                 ]
             };
 
@@ -420,6 +956,10 @@
                         <label class="flex items-center ml-4">
                             <input type="radio" name="absensi_${siswa.nis}" value="Alpha" class="mr-1">
                             <span class="text-red-600 font-medium">❌ Alpha</span>
+                        </label>
+                        <label class="flex items-center ml-4">
+                            <input type="radio" name="absensi_${siswa.nis}" value="Bolos" class="mr-1">
+                            <span class="text-purple-600 font-medium">🏃 Bolos</span>
                         </label>
                     </div>
                 </div>
@@ -556,5 +1096,5 @@
             }, 3000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98f9203d5598fcf7',t:'MTc2MDYzNDE2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98f95e8a32e4fcf7',t:'MTc2MDYzNjcyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
