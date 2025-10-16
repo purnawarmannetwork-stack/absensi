@@ -498,8 +498,11 @@
                         <p class="text-sm text-blue-700 mb-2">
                             <strong>Google Sheets ID:</strong> 1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM
                         </p>
+                        <p class="text-sm text-blue-700 mb-2">
+                            <strong>Apps Script URL:</strong> https://script.google.com/macros/s/AKfycbwRsubtozjKqvp10RIIjIQ_EPTEapHWkt-kPOutwbaQMNjfzjWx8mDGQAgPouiVEtt_xA/exec
+                        </p>
                         <p class="text-sm text-blue-600">
-                            Data petugas akan disinkronkan dengan Google Sheets. Pastikan sheet memiliki kolom: username, password, nama, role.
+                            Data akan disinkronkan dengan Google Sheets melalui Google Apps Script. Pastikan semua sheet dan kolom sudah sesuai struktur yang diperlukan.
                         </p>
                     </div>
                 </div>
@@ -521,11 +524,13 @@
         let currentUser = null;
         let authorizedUsers = [];
         let allStudents = [];
-       	let allTeachers = [];
-		let editCount = {};
-
-		const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwRsubtozjKqvp10RIIjIQ_EPTEapHWkt-kPOutwbaQMNjfzjWx8mDGQAgPouiVEtt_xA/exec'; 
-		const GOOGLE_SHEET_ID = '1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM';
+        let allTeachers = [];
+        let editCount = {};
+        
+        // Google Sheets Configuration
+        const GOOGLE_SHEETS_ID = '1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM';
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwRsubtozjKqvp10RIIjIQ_EPTEapHWkt-kPOutwbaQMNjfzjWx8mDGQAgPouiVEtt_xA/exec';
+        
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateDateTime();
@@ -554,20 +559,16 @@
 
         async function loadAuthorizedUsers() {
             try {
-                // Load from Google Sheets
-                const response = await fetch(`https://docs.google.com/spreadsheets/d/1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM/gviz/tq?tqx=out:json&sheet=users`);
-                const text = await response.text();
-                const json = JSON.parse(text.substr(47).slice(0, -2));
+                // Load from Google Apps Script
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getUsers`);
+                const data = await response.json();
                 
-                authorizedUsers = json.table.rows.map(row => ({
-                    username: row.c[0]?.v || '',
-                    password: row.c[1]?.v || '',
-                    nama: row.c[2]?.v || '',
-                    role: row.c[3]?.v || '',
-                    hariPiket: row.c[4]?.v || null
-                }));
-                
-                console.log('Data petugas berhasil dimuat dari Google Sheets');
+                if (data.success) {
+                    authorizedUsers = data.data;
+                    console.log('Data petugas berhasil dimuat dari Google Sheets');
+                } else {
+                    throw new Error(data.message || 'Failed to load users');
+                }
             } catch (error) {
                 console.error('Error loading users from Google Sheets:', error);
                 // Fallback to demo data
@@ -588,17 +589,15 @@
 
         async function loadStudentsFromSheets() {
             try {
-                const response = await fetch(`https://docs.google.com/spreadsheets/d/1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM/gviz/tq?tqx=out:json&sheet=siswa`);
-                const text = await response.text();
-                const json = JSON.parse(text.substr(47).slice(0, -2));
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSiswa`);
+                const data = await response.json();
                 
-                allStudents = json.table.rows.map(row => ({
-                    nama: row.c[0]?.v || '',
-                    nis: row.c[1]?.v || '',
-                    kelas: row.c[2]?.v || ''
-                }));
-                
-                console.log('Data siswa berhasil dimuat dari Google Sheets');
+                if (data.success) {
+                    allStudents = data.data;
+                    console.log('Data siswa berhasil dimuat dari Google Sheets');
+                } else {
+                    throw new Error(data.message || 'Failed to load students');
+                }
             } catch (error) {
                 console.error('Error loading students from Google Sheets:', error);
                 // Fallback to demo data
@@ -624,35 +623,16 @@
                 const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
                 const currentDay = dayNames[today.getDay()];
                 
-                // Load teacher schedule from Google Sheets
-                const response = await fetch(`https://docs.google.com/spreadsheets/d/1ytPJOKn0vQiZBNZqObCk_gFUhD5K_lIVm405XdQeQJM/gviz/tq?tqx=out:json&sheet=jadwal_guru`);
-                const text = await response.text();
-                const json = JSON.parse(text.substr(47).slice(0, -2));
+                // Load teacher schedule from Google Apps Script
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getJadwalGuru&hari=${currentDay}`);
+                const data = await response.json();
                 
-                // Filter teachers who teach today
-                const todayTeachers = [];
-                json.table.rows.forEach(row => {
-                    const nama = row.c[0]?.v || '';
-                    const nip = row.c[1]?.v || '';
-                    const mapel = row.c[2]?.v || '';
-                    const hari = row.c[3]?.v || '';
-                    
-                    if (hari === currentDay) {
-                        // Check if teacher already exists in today's list
-                        const existingTeacher = todayTeachers.find(t => t.nip === nip);
-                        if (!existingTeacher) {
-                            todayTeachers.push({
-                                nama: nama,
-                                nip: nip,
-                                mapel: mapel,
-                                hari: hari
-                            });
-                        }
-                    }
-                });
-                
-                allTeachers = todayTeachers;
-                console.log(`Data guru yang mengajar hari ${currentDay} berhasil dimuat dari Google Sheets`);
+                if (data.success) {
+                    allTeachers = data.data;
+                    console.log(`Data guru yang mengajar hari ${currentDay} berhasil dimuat dari Google Sheets`);
+                } else {
+                    throw new Error(data.message || 'Failed to load teacher schedule');
+                }
             } catch (error) {
                 console.error('Error loading teacher schedule from Google Sheets:', error);
                 // Fallback to demo data based on current day
@@ -1306,7 +1286,228 @@
             `).join('');
         }
 
-        function loadAbsensiData() {
+        async function loadAbsensiData() {
+            const tanggal = document.getElementById('tanggal').value;
+            const kelas = document.getElementById('kelas').value;
+            const jenisAbsensi = document.getElementById('jenisAbsensi').value;
+
+            if (!tanggal || !jenisAbsensi) {
+                showNotification('Lengkapi tanggal dan jenis absensi terlebih dahulu!', 'error');
+                return;
+            }
+
+            if (jenisAbsensi === 'siswa' && !kelas) {
+                showNotification('Pilih kelas untuk absensi siswa!', 'error');
+                return;
+            }
+
+            // Show loading state
+            const loadBtn = document.querySelector('button[onclick="loadAbsensiData()"]');
+            const originalText = loadBtn.textContent;
+            loadBtn.textContent = '🔄 Memuat Data...';
+            loadBtn.disabled = true;
+
+            try {
+                // Load existing attendance data from Google Sheets
+                await loadExistingAbsensiFromSheets(tanggal, kelas, jenisAbsensi);
+
+                // Check edit permissions
+                const absensiKey = `${tanggal}_${kelas}_${jenisAbsensi}`;
+                const currentEditCount = editCount[absensiKey] || 0;
+                
+                if (currentUser.role !== 'admin' && currentEditCount >= 3) {
+                    showNotification('Absensi sudah mencapai batas maksimal edit (3 kali)!', 'error');
+                    return;
+                }
+
+                // Show edit count info
+                const editCountInfo = document.getElementById('editCountInfo');
+                if (currentEditCount > 0) {
+                    editCountInfo.classList.remove('hidden');
+                    if (currentUser.role === 'admin') {
+                        editCountInfo.innerHTML = `📝 Sudah diedit ${currentEditCount} kali oleh guru piket`;
+                    } else {
+                        editCountInfo.innerHTML = `⚠️ Sudah diedit ${currentEditCount} kali (maksimal 3 kali)`;
+                    }
+                } else {
+                    editCountInfo.classList.add('hidden');
+                }
+
+                let dataToShow = [];
+                let titleText = '';
+
+                if (jenisAbsensi === 'siswa') {
+                    dataToShow = allStudents.filter(s => s.kelas === kelas);
+                    titleText = `Absensi Siswa Kelas ${kelas}`;
+                } else if (jenisAbsensi === 'guru') {
+                    dataToShow = allTeachers;
+                    titleText = 'Absensi Guru';
+                }
+
+                currentAbsensiData = dataToShow;
+                
+                const absensiList = document.getElementById('absensiList');
+                const absensiTitle = document.getElementById('absensiTitle');
+                
+                absensiTitle.textContent = titleText;
+            
+                if (jenisAbsensi === 'siswa') {
+                    absensiList.innerHTML = currentAbsensiData.map((item, index) => {
+                        // Check if there's existing attendance data for this student
+                        const existingData = allAbsensiData.find(data => 
+                            data.tanggal === tanggal && 
+                            data.kelas === kelas && 
+                            data.jenisAbsensi === 'siswa' && 
+                            data.identifier === item.nis
+                        );
+                        
+                        const currentStatus = existingData ? existingData.status : 'Hadir';
+                        
+                        return `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">
+                                        ${index + 1}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">${item.nama}</div>
+                                        <div class="text-sm text-gray-500">NIS: ${item.nis}</div>
+                                        ${existingData ? '<div class="text-xs text-green-600">✓ Sudah diabsen</div>' : ''}
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="absensi_${item.nis}" value="Hadir" class="mr-1" ${currentStatus === 'Hadir' ? 'checked' : ''}>
+                                        <span class="text-green-600 font-medium">✅ Hadir</span>
+                                    </label>
+                                    <label class="flex items-center ml-4">
+                                        <input type="radio" name="absensi_${item.nis}" value="Sakit" class="mr-1" ${currentStatus === 'Sakit' ? 'checked' : ''}>
+                                        <span class="text-yellow-600 font-medium">🤒 Sakit</span>
+                                    </label>
+                                    <label class="flex items-center ml-4">
+                                        <input type="radio" name="absensi_${item.nis}" value="Izin" class="mr-1" ${currentStatus === 'Izin' ? 'checked' : ''}>
+                                        <span class="text-blue-600 font-medium">📝 Izin</span>
+                                    </label>
+                                    <label class="flex items-center ml-4">
+                                        <input type="radio" name="absensi_${item.nis}" value="Alpha" class="mr-1" ${currentStatus === 'Alpha' ? 'checked' : ''}>
+                                        <span class="text-red-600 font-medium">❌ Alpha</span>
+                                    </label>
+                                    <label class="flex items-center ml-4">
+                                        <input type="radio" name="absensi_${item.nis}" value="Bolos" class="mr-1" ${currentStatus === 'Bolos' ? 'checked' : ''}>
+                                        <span class="text-purple-600 font-medium">🏃 Bolos</span>
+                                    </label>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    absensiList.innerHTML = currentAbsensiData.map((item, index) => {
+                        // Check if there's existing attendance data for this teacher
+                        const existingData = allAbsensiData.find(data => 
+                            data.tanggal === tanggal && 
+                            data.jenisAbsensi === 'guru' && 
+                            data.identifier === item.nip
+                        );
+                        
+                        const currentStatus = existingData ? existingData.status : 'Hadir';
+                        
+                        return `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold mr-4">
+                                        ${index + 1}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">${item.nama}</div>
+                                        <div class="text-sm text-gray-500">NIP: ${item.nip} | ${item.mapel}</div>
+                                        ${existingData ? '<div class="text-xs text-green-600">✓ Sudah diabsen</div>' : ''}
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="absensi_${item.nip}" value="Hadir" class="mr-1" ${currentStatus === 'Hadir' ? 'checked' : ''}>
+                                        <span class="text-green-600 font-medium">✅ Hadir</span>
+                                    </label>
+                                    <label class="flex items-center ml-4">
+                                        <input type="radio" name="absensi_${item.nip}" value="Sakit" class="mr-1" ${currentStatus === 'Sakit' ? 'checked' : ''}>
+                                        <span class="text-yellow-600 font-medium">🤒 Sakit</span>
+                                    </label>
+                                    <label class="flex items-center ml-4">
+                                        <input type="radio" name="absensi_${item.nip}" value="Izin" class="mr-1" ${currentStatus === 'Izin' ? 'checked' : ''}>
+                                        <span class="text-blue-600 font-medium">📝 Izin</span>
+                                    </label>
+                                    <label class="flex items-center ml-4">
+                                        <input type="radio" name="absensi_${item.nip}" value="Alpha" class="mr-1" ${currentStatus === 'Alpha' ? 'checked' : ''}>
+                                        <span class="text-red-600 font-medium">❌ Alpha</span>
+                                    </label>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                document.getElementById('daftarAbsensi').classList.remove('hidden');
+                
+                // Show edit count warning if applicable
+                if (currentUser.role !== 'admin' && currentEditCount > 0) {
+                    showNotification(`Peringatan: Absensi ini sudah diedit ${currentEditCount} kali (maksimal 3 kali)`, 'warning');
+                }
+                
+                showNotification(`Data ${jenisAbsensi} berhasil dimuat!`);
+                
+            } catch (error) {
+                console.error('Error loading attendance data:', error);
+                showNotification('Gagal memuat data absensi!', 'error');
+            } finally {
+                // Reset button
+                loadBtn.textContent = originalText;
+                loadBtn.disabled = false;
+            }
+        }
+
+        async function loadExistingAbsensiFromSheets(tanggal, kelas, jenisAbsensi) {
+            try {
+                // Load existing attendance data from Google Apps Script
+                const kelasParam = jenisAbsensi === 'guru' ? 'all' : kelas;
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAbsensi&tanggal=${tanggal}&kelas=${kelasParam}&jenisAbsensi=${jenisAbsensi}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Clear existing data for this date/class/type
+                    allAbsensiData = allAbsensiData.filter(item => 
+                        !(item.tanggal === tanggal && 
+                          item.kelas === kelasParam && 
+                          item.jenisAbsensi === jenisAbsensi)
+                    );
+                    
+                    // Add new data from Google Sheets
+                    allAbsensiData.push(...data.data);
+                    
+                    console.log(`Loaded ${data.data.length} existing attendance records from Google Sheets`);
+                } else {
+                    console.log('No existing attendance data found for this date/class/type');
+                }
+                
+            } catch (error) {
+                console.error('Error loading existing attendance from Google Sheets:', error);
+                // Continue with empty data if sheets can't be loaded
+            }
+        }
+
+        function markAllHadir() {
+            const jenisAbsensi = document.getElementById('jenisAbsensi').value;
+            
+            currentAbsensiData.forEach(item => {
+                const identifier = jenisAbsensi === 'siswa' ? item.nis : item.nip;
+                const hadirRadio = document.querySelector(`input[name="absensi_${identifier}"][value="Hadir"]`);
+                if (hadirRadio) hadirRadio.checked = true;
+            });
+            
+            const itemType = jenisAbsensi === 'siswa' ? 'siswa' : 'guru';
+            showNotification(`Semua ${itemType} ditandai hadir!`);
+        }
+
+        function saveAbsensi() {
             const tanggal = document.getElementById('tanggal').value;
             const kelas = document.getElementById('kelas').value;
             const jenisAbsensi = document.getElementById('jenisAbsensi').value;
@@ -1343,176 +1544,65 @@
                 editCountInfo.classList.add('hidden');
             }
 
-            let dataToShow = [];
-            let titleText = '';
-
-            if (jenisAbsensi === 'siswa') {
-                dataToShow = allStudents.filter(s => s.kelas === kelas);
-                titleText = `Absensi Siswa Kelas ${kelas}`;
-            } else if (jenisAbsensi === 'guru') {
-                dataToShow = allTeachers;
-                titleText = 'Absensi Guru';
-            }
-
-            currentAbsensiData = dataToShow;
-            
-            const absensiList = document.getElementById('absensiList');
-            const absensiTitle = document.getElementById('absensiTitle');
-            
-            absensiTitle.textContent = titleText;
-            
-            if (jenisAbsensi === 'siswa') {
-                absensiList.innerHTML = currentAbsensiData.map((item, index) => `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">
-                                ${index + 1}
-                            </div>
-                            <div>
-                                <div class="font-medium text-gray-800">${item.nama}</div>
-                                <div class="text-sm text-gray-500">NIS: ${item.nis}</div>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <label class="flex items-center">
-                                <input type="radio" name="absensi_${item.nis}" value="Hadir" class="mr-1" checked>
-                                <span class="text-green-600 font-medium">✅ Hadir</span>
-                            </label>
-                            <label class="flex items-center ml-4">
-                                <input type="radio" name="absensi_${item.nis}" value="Sakit" class="mr-1">
-                                <span class="text-yellow-600 font-medium">🤒 Sakit</span>
-                            </label>
-                            <label class="flex items-center ml-4">
-                                <input type="radio" name="absensi_${item.nis}" value="Izin" class="mr-1">
-                                <span class="text-blue-600 font-medium">📝 Izin</span>
-                            </label>
-                            <label class="flex items-center ml-4">
-                                <input type="radio" name="absensi_${item.nis}" value="Alpha" class="mr-1">
-                                <span class="text-red-600 font-medium">❌ Alpha</span>
-                            </label>
-                            <label class="flex items-center ml-4">
-                                <input type="radio" name="absensi_${item.nis}" value="Bolos" class="mr-1">
-                                <span class="text-purple-600 font-medium">🏃 Bolos</span>
-                            </label>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                absensiList.innerHTML = currentAbsensiData.map((item, index) => `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold mr-4">
-                                ${index + 1}
-                            </div>
-                            <div>
-                                <div class="font-medium text-gray-800">${item.nama}</div>
-                                <div class="text-sm text-gray-500">NIP: ${item.nip} | ${item.mapel}</div>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <label class="flex items-center">
-                                <input type="radio" name="absensi_${item.nip}" value="Hadir" class="mr-1" checked>
-                                <span class="text-green-600 font-medium">✅ Hadir</span>
-                            </label>
-                            <label class="flex items-center ml-4">
-                                <input type="radio" name="absensi_${item.nip}" value="Sakit" class="mr-1">
-                                <span class="text-yellow-600 font-medium">🤒 Sakit</span>
-                            </label>
-                            <label class="flex items-center ml-4">
-                                <input type="radio" name="absensi_${item.nip}" value="Izin" class="mr-1">
-                                <span class="text-blue-600 font-medium">📝 Izin</span>
-                            </label>
-                            <label class="flex items-center ml-4">
-                                <input type="radio" name="absensi_${item.nip}" value="Alpha" class="mr-1">
-                                <span class="text-red-600 font-medium">❌ Alpha</span>
-                            </label>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            document.getElementById('daftarAbsensi').classList.remove('hidden');
-            
-            // Show edit count warning if applicable
-            if (currentUser.role !== 'admin' && currentEditCount > 0) {
-                showNotification(`Peringatan: Absensi ini sudah diedit ${currentEditCount} kali (maksimal 3 kali)`, 'warning');
-            }
-            
-            showNotification(`Data ${jenisAbsensi} berhasil dimuat!`);
-        }
-
-        function markAllHadir() {
-            const jenisAbsensi = document.getElementById('jenisAbsensi').value;
-            
+            const absensiData = [];
             currentAbsensiData.forEach(item => {
                 const identifier = jenisAbsensi === 'siswa' ? item.nis : item.nip;
-                const hadirRadio = document.querySelector(`input[name="absensi_${identifier}"][value="Hadir"]`);
-                if (hadirRadio) hadirRadio.checked = true;
+                const selectedStatus = document.querySelector(`input[name="absensi_${identifier}"]:checked`);
+                if (selectedStatus) {
+                    absensiData.push({
+                        tanggal,
+                        kelas,
+                        jenisAbsensi,
+                        nama: item.nama,
+                        identifier: identifier,
+                        status: selectedStatus.value,
+                        timestamp: new Date().toISOString(),
+                        savedBy: currentUser.username
+                    });
+                }
             });
+
+            // Save to Google Sheets via Apps Script
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveAbsensi',
+                        data: absensiData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update local data
+                    allAbsensiData.push(...absensiData);
+                    
+                    // Update edit count
+                    if (currentUser.role !== 'admin') {
+                        editCount[absensiKey] = currentEditCount + 1;
+                    }
+                    
+                    const itemType = jenisAbsensi === 'siswa' ? 'siswa' : 'guru';
+                    showNotification(`Absensi berhasil disimpan ke Google Sheets untuk ${absensiData.length} ${itemType}!`);
+                } else {
+                    throw new Error(result.message || 'Failed to save attendance');
+                }
+            } catch (error) {
+                console.error('Error saving to Google Sheets:', error);
+                // Save locally as fallback
+                allAbsensiData.push(...absensiData);
+                showNotification('Absensi disimpan secara lokal (gagal sinkronisasi dengan Google Sheets)', 'warning');
+            }
             
-            const itemType = jenisAbsensi === 'siswa' ? 'siswa' : 'guru';
-            showNotification(`Semua ${itemType} ditandai hadir!`);
+            // Reset form
+            document.getElementById('absensiForm').reset();
+            document.getElementById('daftarAbsensi').classList.add('hidden');
+            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
         }
-
-async function saveAbsensi() {
-	if (currentAbsensiData.length === 0) {
-		showNotification('Tidak ada data yang perlu disimpan', 'warning');
-		return;
-	}
-
-	const saveAbsensiBtn = document.getElementById('saveAbsensiBtn');
-	const originalText = saveAbsensiBtn.textContent;
-	saveAbsensiBtn.textContent = '💾 Menyimpan...';
-	saveAbsensiBtn.disabled = true;
-
-	const jenisAbsensi = document.getElementById('jenisAbsensi').value;
-	const tanggal = document.getElementById('tanggal').value;
-	
-	// Siapkan data untuk dikirim ke Apps Script
-	const payload = {
-		action: 'saveAbsensi',
-		jenisAbsensi: jenisAbsensi,
-		tanggal: tanggal,
-		absensiList: currentAbsensiData.map(item => ({
-			nama: item.nama,
-			nis: item.nis || item.nip,
-			kelas: item.kelas || '-',
-			status: item.status,
-			keterangan: item.keterangan,
-		})),
-		petugasInput: currentUser.nama
-	};
-
-	try {
-		// Panggilan fetch harus berada dalam fungsi async
-		const response = await fetch(WEB_APP_URL, { 
-			method: 'POST',
-			mode: 'cors',
-			headers: {
-				'Content-Type': 'text/plain;charset=utf-8', 
-			},
-			body: JSON.stringify(payload)
-		});
-
-		const result = await response.json();
-		
-		if (result.status === 'success') {
-			showNotification(result.message, 'success');
-			currentAbsensiData = [];
-			renderAbsensiList();
-		} else {
-			showNotification('Gagal menyimpan: ' + result.message, 'error');
-			console.error('Apps Script Error:', result.message);
-		}
-
-	} catch (error) {
-		showNotification('Terjadi kesalahan koneksi/network saat menyimpan data.', 'error');
-		console.error('Fetch Error:', error);
-	} finally {
-		saveAbsensiBtn.textContent = originalText;
-		saveAbsensiBtn.disabled = false;
-	}
-}		
 
         async function tarikDataAbsensi() {
             const tanggalMulai = document.getElementById('filterTanggalMulai').value;
@@ -1535,10 +1625,32 @@ async function saveAbsensi() {
             tarikDataBtn.disabled = true;
 
             try {
-                // Simulate API call to Google Sheets to fetch historical data
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Fetch historical data from Google Apps Script
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAbsensiRange&tanggalMulai=${tanggalMulai}&tanggalAkhir=${tanggalAkhir}`);
+                const data = await response.json();
 
-                // Generate demo historical data for the selected date range
+                if (data.success) {
+                    // Clear existing data in the date range
+                    allAbsensiData = allAbsensiData.filter(item => 
+                        item.tanggal < tanggalMulai || item.tanggal > tanggalAkhir
+                    );
+                    
+                    // Add new data from Google Sheets
+                    allAbsensiData.push(...data.data);
+
+                    // Update dashboard
+                    loadDashboard();
+
+                    showNotification(`Berhasil menarik ${data.data.length} data absensi dari Google Sheets!`);
+                } else {
+                    throw new Error(data.message || 'Failed to fetch attendance data');
+                }
+
+            } catch (error) {
+                console.error('Error fetching attendance data:', error);
+                showNotification('Gagal menarik data dari Google Sheets! Menggunakan data demo.', 'warning');
+                
+                // Fallback to demo data generation
                 const startDate = new Date(tanggalMulai);
                 const endDate = new Date(tanggalAkhir);
                 const newAbsensiData = [];
@@ -1594,15 +1706,7 @@ async function saveAbsensi() {
 
                 // Add new data to existing data
                 allAbsensiData.push(...newAbsensiData);
-
-                // Update dashboard
                 loadDashboard();
-
-                showNotification(`Berhasil menarik ${newAbsensiData.length} data absensi dari ${tanggalMulai} sampai ${tanggalAkhir}!`);
-
-            } catch (error) {
-                console.error('Error fetching attendance data:', error);
-                showNotification('Gagal menarik data dari Google Sheets!', 'error');
             } finally {
                 // Reset button
                 tarikDataBtn.textContent = originalText;
@@ -1694,6 +1798,5 @@ async function saveAbsensi() {
             }, 4000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98f9db7c6592fcf7',t:'MTc2MDY0MTgzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98fa60f6b5f9cbe1',t:'MTc2MDY0NzMwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
